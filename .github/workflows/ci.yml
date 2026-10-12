@@ -1,0 +1,32 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: validate example NDJSON against the event schema
+        run: |
+          npm i --no-save ajv@8 ajv-formats@3
+          node scripts/validate-ndjson.mjs schema/event.schema.json schema/examples/valid.ndjson
+      - name: apply migrations
+        env: { PGPASSWORD: postgres }
+        run: |
+          for f in schema/migrations/*.sql; do psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f "$f"; done
+      - run: bash scripts/check-public.sh .
+      - name: gitleaks
+        run: |
+          V=8.30.1
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${V}/gitleaks_${V}_linux_x64.tar.gz" -o "$RUNNER_TEMP/gl.tgz"
+          mkdir "$RUNNER_TEMP/gl" && tar -xzf "$RUNNER_TEMP/gl.tgz" -C "$RUNNER_TEMP/gl"
+          "$RUNNER_TEMP/gl/gitleaks" git . --no-banner --redact

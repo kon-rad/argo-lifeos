@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kon-rad/argo-lifeos/schema/event.schema.json",
+  "title": "argo-lifeos NDJSON record",
+  "description": "One line of connector output or of a POST /v1/ingest body. Version 0: expect breaking changes until 1.0.",
+  "oneOf": [
+    { "$ref": "#/$defs/blob" },
+    { "$ref": "#/$defs/event" },
+    { "$ref": "#/$defs/cursor" }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "blob": {
+      "type": "object",
+      "required": ["type", "sha256", "mime", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "blob" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mime": { "type": "string", "minLength": 3 },
+        "path": { "type": "string", "minLength": 1, "description": "Local file the ingest service reads, re-hashes, encrypts and uploads." }
+      }
+    },
+    "cursor": {
+      "type": "object",
+      "required": ["type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "cursor" },
+        "value": { "type": "string", "description": "Opaque; passed back to the connector on its next run." }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["type", "source", "kind", "start", "dedupe_key", "sensitivity"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "event" },
+        "source": { "type": "string", "pattern": "^[a-z0-9][a-z0-9:/_-]{0,63}$", "description": "e.g. ring, chrome, owntracks, exo-edge, agent:hermes/builder" },
+        "kind": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,31}$", "description": "e.g. sleep, web_visit, meal, stay, utterance, bookmark, sample_batch" },
+        "start": { "$ref": "#/$defs/timestamp" },
+        "end": { "$ref": "#/$defs/timestamp", "description": "Omit for an instant." },
+        "timeframe_end": { "$ref": "#/$defs/timestamp", "description": "Happened sometime between start and this, exact time unknown." },
+        "tz": { "type": "string", "description": "IANA zone at the time, e.g. Asia/Tokyo." },
+        "tz_origin": { "enum": ["explicit", "device", "location", "inferred", "unknown"], "description": "How the local offset was known." },
+        "time_uncertainty_ms": { "type": "integer", "minimum": 0 },
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "coord_uncertainty_m": { "type": "number", "minimum": 0 },
+        "title": { "type": "string", "maxLength": 500 },
+        "sensitivity": { "type": "integer", "minimum": 0, "maximum": 3, "description": "0 public, 1 personal, 2 private, 3 intimate." },
+        "raw_ref": { "$ref": "#/$defs/sha256" },
+        "dedupe_key": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "payload": { "type": "object" },
+        "typed": {
+          "type": "object",
+          "required": ["table", "row"],
+          "additionalProperties": false,
+          "properties": {
+            "table": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+            "row": { "type": "object" }
+          }
+        }
+      },
+      "dependentRequired": { "lat": ["lon"], "lon": ["lat"] }
+    }
+  }
+}

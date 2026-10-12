@@ -1,0 +1,4 @@
+{"type":"blob","sha256":"9f2c6c1f5d0e4b7a8c3e2d1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b","mime":"image/jpeg","path":"/tmp/lifeos/meal.jpg"}
+{"type":"event","source":"telegram-meal","kind":"meal","start":"2026-10-12T12:31:00+09:00","tz":"Asia/Tokyo","tz_origin":"explicit","dedupe_key":"tg:8812","sensitivity":1,"raw_ref":"9f2c6c1f5d0e4b7a8c3e2d1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b","payload":{"caption":"lunch"}}
+{"type":"event","source":"exo-edge","kind":"utterance","start":"2026-10-12T13:12:04+09:00","end":"2026-10-12T13:12:31+09:00","lat":35.6984,"lon":139.7731,"coord_uncertainty_m":12,"dedupe_key":"memo:01JA0000000000000000000000","sensitivity":2,"payload":{"button":"mic"}}
+{"type":"cursor","value":"8812"}
